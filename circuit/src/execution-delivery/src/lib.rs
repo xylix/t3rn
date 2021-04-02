@@ -256,6 +256,43 @@ pub struct Payload<Public, BlockNumber> {
     public: Public,
 }
 
+#[derive(Clone)]
+pub struct Phase<Account, Balance> {
+    step: Compose<Account, Balance>
+}
+
+#[derive(Clone)]
+pub struct InterExecSchedule<Account, Balance> {
+    phases: Phase<Account, Balance>
+}
+
+impl<T: Config, Balance> InterExecSchedule<T, Balance> {
+
+    
+}
+
+type Name = Vec<u8>;
+
+impl<T: Config> InterExecSchedule<T, u64> {
+    fn create(
+        _components: Vec<Compose<T, u64>>, 
+        _io_schedule: Vec<u8>) -> Self 
+    {
+        let commands = std::str::from_utf8(&_io_schedule).expect("Invalid IO schedule");
+
+        let components_by_name: HashMap<Name, Compose<T, u64>> 
+            = HashMap::from_iter(_components.map())
+
+        for phase in commands.split(',') {
+            for step in phase.split('|') {
+
+
+            }
+        }
+        let sequential
+    }
+}
+
 impl<T: SigningTypes> SignedPayload<T> for Payload<T::Public, T::BlockNumber> {
     fn public(&self) -> T::Public {
         self.public.clone()
@@ -272,7 +309,7 @@ impl<T: Config> Pallet<T> {
         _components: Vec<Compose<T::AccountId, u64>>,
         _io_schedule: Vec<u8>,
     ) -> Result<InterExecSchedule<T::AccountId, u64>, &'static str> {
-        let inter_schedule = InterExecSchedule::default();
+        let inter_schedule = InterExecSchedule::create(&_components, &_io_schedule);
         Ok(inter_schedule)
     }
 }
