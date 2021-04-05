@@ -23,7 +23,7 @@ use sp_runtime::RuntimeDebug;
 use sp_std::prelude::*;
 
 /// A struct that encodes RPC parameters required for a call to a smart-contract.
-#[derive(Clone, Encode, Decode)]
+#[derive(Eq, PartialEq, Clone, Encode, Decode, RuntimeDebug)]
 pub struct Compose<Account, Balance> {
     pub name: Vec<u8>,
     pub code_txt: Vec<u8>,
