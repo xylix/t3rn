@@ -52,6 +52,7 @@ use sp_runtime::{
     RuntimeDebug,
 };
 use sp_std::vec::Vec;
+use sp_std::collections::btree_map::BTreeMap;
 use t3rn_primitives::*;
 
 #[cfg(test)]
@@ -258,38 +259,44 @@ pub struct Payload<Public, BlockNumber> {
 
 #[derive(Clone)]
 pub struct Phase<Account, Balance> {
-    step: Compose<Account, Balance>
+    steps: Vec<Compose<Account, Balance>>
 }
 
 #[derive(Clone)]
 pub struct InterExecSchedule<Account, Balance> {
-    phases: Phase<Account, Balance>
-}
-
-impl<T: Config, Balance> InterExecSchedule<T, Balance> {
-
-    
+    phases: Vec<Phase<Account, Balance>>
 }
 
 type Name = Vec<u8>;
 
+// FIXME: should maybe be T::AccountId but that runs into type problems
 impl<T: Config> InterExecSchedule<T, u64> {
     fn create(
-        _components: Vec<Compose<T, u64>>, 
-        _io_schedule: Vec<u8>) -> Self 
+        _components: Vec<Compose<T::AccountId, u64>>, 
+        _io_schedule: Vec<u8>) -> Result<Self, &'static str>
     {
         let commands = std::str::from_utf8(&_io_schedule).expect("Invalid IO schedule");
 
-        let components_by_name: HashMap<Name, Compose<T, u64>> 
-            = HashMap::from_iter(_components.map())
-
-        for phase in commands.split(',') {
-            for step in phase.split('|') {
-
-
-            }
+        let mut components_by_name: BTreeMap<Name, Compose<T::AccountId, u64>> = BTreeMap::new();
+        for component in _components {
+            components_by_name.insert(component.name, component);
         }
-        let sequential
+
+        let mut phases: Vec<Phase<T::AccountId, u64>> = Vec::new();
+        for phase_name in commands.split(',') {
+            let mut steps: Vec<Compose<T::AccountId, u64>>;
+            for step_name in phase_name.split('|') {
+                // TODO: & ... as_bytes().to_vec() is a bit ugly
+                let phase = match components_by_name.get(&step_name.as_bytes().to_vec()) {
+                    Some(component) => component,
+                    None => return Err("Invalid step name")
+                };
+                steps.push(phase.clone());
+            }
+            let phase = Phase { steps };
+            phases.push(phase);
+        }
+        Ok(InterExecSchedule { phases })
     }
 }
 
@@ -309,7 +316,7 @@ impl<T: Config> Pallet<T> {
         _components: Vec<Compose<T::AccountId, u64>>,
         _io_schedule: Vec<u8>,
     ) -> Result<InterExecSchedule<T::AccountId, u64>, &'static str> {
-        let inter_schedule = InterExecSchedule::create(&_components, &_io_schedule);
+        let inter_schedule = InterExecSchedule::create(_components, _io_schedule);
         Ok(inter_schedule)
     }
 }
