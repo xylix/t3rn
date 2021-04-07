@@ -185,7 +185,7 @@ pub mod pallet {
                     // ideally use collection of different clients and dispatch to different clients but with std gateway
                     // receiver on the other end of message lane.
                     // message lane : verify finality : gateway id : finality_verifier :: verify single message lane by gateway id
-                    Self::deposit_event(Event::NewPhase(who.clone(), 0, step.compose.name.clone()));
+                    Self::deposit_event(Event::NewPhase(who.clone(), 0, step.name.clone()));
                 }
             }
 
